@@ -65,9 +65,8 @@ class Breadcrumbs extends React.Component {
     //if there is no route path defined and we are set to hide these then do so
     if( ! route.path && this.props.hideNoPath) return null;
 
-    const { excludes } = this.props;
+    const { excludes, params } = this.props;
 
-    let paramName = '';
     let pathValue = '';
     let name = this._resolveRouteName(route);
     if (name && excludes && excludes.some(item => item === name)) return null;
@@ -75,18 +74,9 @@ class Breadcrumbs extends React.Component {
     // don't make link if route doesn't have a child route
     let makeLink = routesLength !== (crumbsLength + 1);
 
-
     // don't make link if route has a disabled breadcrumblink prop
     if(route.hasOwnProperty("breadcrumblink")){
       makeLink = route.breadcrumblink;
-    }
-
-    // find param name (if provided)
-    if(this.props.params){
-      paramName = Object.keys(this.props.params).map((param) => {
-        pathValue=param;
-        return this.props.params[param];
-      })
     }
 
     // Replace route param with real param (if provided)
