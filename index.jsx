@@ -6,17 +6,22 @@
  * @extends component
  * @requires react
  * @requires react-router
- *
  */
 import React from 'react'
-import {Router, Route, Link} from 'react-router'
+import { Router, Route, Link } from 'react-router'
 import ExecutionEnvironment from 'exenv';
+
 
 class Breadcrumbs extends React.Component {
 
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.displayName = "Breadcrumbs";
+  }
+
+  render(createElement=true) {
+    const { routes } = this.props;
+    return this._buildRoutes(this.props.routes, createElement);
   }
 
   _getDisplayName(route) {
@@ -26,21 +31,22 @@ class Breadcrumbs extends React.Component {
       name = route.getDisplayName();
     }
 
-    if(route.indexRoute) {
+    if (route.indexRoute) {
       name = name || route.indexRoute.displayName || null;
-    } else {
+    }
+    else {
       name = name || route.displayName || null;
     }
 
     //check to see if a custom name has been applied to the route
-    if (!name && !!route.name) {
+    if ( ! name && route.name) {
       name = route.name;
     }
 
     //if the name exists and it's in the excludes list exclude this route
     //if (name && this.props.excludes.some(item => item === name)) return null;
 
-    if (!name && this.props.displayMissing) {
+    if ( ! name && this.props.displayMissing) {
       name = this.props.displayMissingText;
     }
 
@@ -48,35 +54,27 @@ class Breadcrumbs extends React.Component {
   }
 
   _resolveRouteName(route){
-    let name = this._getDisplayName(route);
-    if(!name && route.breadcrumbName) name=route.breadcrumbName;
-    if(!name && route.name) name=route.name;
+    const name = this._getDisplayName(route);
+    if ( ! name) {
+      return route.breadcrumbName ? route.breadcrumbName : route.name;
+    }
     return name;
   }
 
-  _processRoute(route,routesLength,crumbsLength,isRoot,createElement) {
+  _processRoute(route, routesLength, crumbsLength, isRoot, createElement) {
     //if there is no route path defined and we are set to hide these then do so
-    if(!route.path && this.props.hideNoPath) return null;
+    if( ! route.path && this.props.hideNoPath) return null;
 
-    let separator = "";
-    let paramName="";
-    let pathValue="";
+    const { excludes } = this.props;
+
+    let paramName = '';
+    let pathValue = '';
     let name = this._resolveRouteName(route);
-    if (name &&
-        'excludes' in this.props &&
-        this.props.excludes.some(item => item === name)) return null;
-
-    let makeLink=true;
+    if (name && excludes && excludes.some(item => item === name)) return null;
 
     // don't make link if route doesn't have a child route
-    if(makeLink){
-      makeLink = route.childRoutes ? true : false;
-      makeLink = routesLength !== (crumbsLength+1);
-    }
+    let makeLink = routesLength !== (crumbsLength + 1);
 
-    // set up separator
-    separator = routesLength !== (crumbsLength+1) ? this.props.separator : "";
-    if(!makeLink) separator = "";
 
     // don't make link if route has a disabled breadcrumblink prop
     if(route.hasOwnProperty("breadcrumblink")){
@@ -137,11 +135,10 @@ class Breadcrumbs extends React.Component {
         itemClass += ' ' + this.props.activeItemClass;
       }
       return !createElement ? link:
-        React.createElement(this.props.itemElement, { className: itemClass, key: Math.random()*100 }, link, separator);
+        React.createElement(this.props.itemElement, { className: itemClass, key: Math.random()*100 }, link);
     }
 
     return null;
-
   }
 
   _buildRoutes(routes, createElement) {
@@ -216,24 +213,15 @@ class Breadcrumbs extends React.Component {
 
     return !createElement ? crumbs:
       React.createElement(this.props.wrapperElement, {className: this.props.customClass || this.props.wrapperClass}, crumbs);
-
-  }
-
-  render(createElement=true) {
-    return this._buildRoutes(this.props.routes, createElement);
   }
 }
 
 /**
  * @property PropTypes
  * @description Property types supported by this component
- * @type {{separator: *, displayMissing: *, displayName: *, breadcrumbName: *, wrapperElement: *, wrapperClass: *, itemElement: *, itemClass: *, activeItemClass: *,  customClass: *,excludes: *}}
+ * @type {{displayMissing: *, displayName: *, breadcrumbName: *, wrapperElement: *, wrapperClass: *, itemElement: *, itemClass: *, activeItemClass: *,  customClass: *,excludes: *}}
  */
 Breadcrumbs.propTypes = {
-  separator: React.PropTypes.oneOfType([
-    React.PropTypes.element,
-    React.PropTypes.string
-  ]),
   displayMissing: React.PropTypes.bool,
   prettify: React.PropTypes.bool,
   displayMissingText: React.PropTypes.string,
@@ -254,10 +242,9 @@ Breadcrumbs.propTypes = {
 /**
  * @property defaultProps
  * @description sets the default values for propTypes if they are not provided
- * @type {{separator: string, displayMissing: boolean, wrapperElement: string, itemElement: string, wrapperClass: string, customClass: string}}
+ * @type {{displayMissing: boolean, wrapperElement: string, itemElement: string, wrapperClass: string, customClass: string}}
  */
 Breadcrumbs.defaultProps = {
-  separator: " > ",
   displayMissing: true,
   displayMissingText: "Missing name prop from Route",
   wrapperElement: "div",
